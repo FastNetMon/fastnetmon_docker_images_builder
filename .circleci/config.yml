@@ -5,4 +5,5 @@ jobs:
      image: ubuntu-1604:202004-01
    steps:
      - checkout
-     - run: docker build 
+     - run: docker build .
+     - run: sudo docker images
