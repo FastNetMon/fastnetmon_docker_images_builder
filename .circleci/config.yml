@@ -5,8 +5,8 @@ jobs:
      image: ubuntu-1604:202004-01
    steps:
      - checkout
-     - run: docker build . -t fastnetmonltd/fastnetmon-advanced:2.0.196 -t fastnetmonltd/fastnetmon-advanced:latest
+     - run: docker build . -t fastnetmonltd/fastnetmon-advanced:2.0.198 -t fastnetmonltd/fastnetmon-advanced:latest
      - run: sudo docker images
      - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-     - run: sudo docker push fastnetmonltd/fastnetmon-advanced:2.0.196
+     - run: sudo docker push fastnetmonltd/fastnetmon-advanced:2.0.198
      - run: sudo docker push fastnetmonltd/fastnetmon-advanced:latest
