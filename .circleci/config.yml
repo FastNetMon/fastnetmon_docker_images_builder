@@ -10,3 +10,4 @@ jobs:
      - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
      - run: sudo docker push fastnetmonltd/fastnetmon-advanced:2.0.279
      - run: sudo docker push fastnetmonltd/fastnetmon-advanced:latest
+
