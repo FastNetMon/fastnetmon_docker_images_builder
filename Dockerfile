@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https libssl1.0.0 iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
@@ -33,6 +33,6 @@ Version: GnuPG v1\n\
  =kFoU\n\
  -----END PGP PUBLIC KEY BLOCK-----' >> fastnetmon.key && apt-key add fastnetmon.key && \
     apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=2.0.199
+    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=2.0.279
 
 CMD exec /opt/fastnetmon/app/bin/fastnetmon
