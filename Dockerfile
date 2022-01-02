@@ -33,6 +33,6 @@ Version: GnuPG v1\n\
  =kFoU\n\
  -----END PGP PUBLIC KEY BLOCK-----' >> fastnetmon.key && apt-key add fastnetmon.key && \
     apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=2.0.279
+    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=2.0.280
 
 CMD exec /opt/fastnetmon/app/bin/fastnetmon
