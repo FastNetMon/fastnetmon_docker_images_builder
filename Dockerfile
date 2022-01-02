@@ -2,7 +2,7 @@ FROM ubuntu:20.04
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https libssl1.1 iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
-    echo "deb [arch=amd64] https://repo.fastnetmon.com/fastnetmon_ubuntu_bionic bionic fastnetmon" > /etc/apt/sources.list.d/fastnetmon.list &&\
+    echo "deb [arch=amd64] https://repo.fastnetmon.com/fastnetmon_ubuntu_focal focal fastnetmon" > /etc/apt/sources.list.d/fastnetmon.list &&\
     echo '-----BEGIN PGP PUBLIC KEY BLOCK-----\n\
 Version: GnuPG v1\n\
  \n\
