@@ -1,8 +1,10 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
+
+ARG FASTNETMON_VERSION
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https libssl1.1 iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
-    echo "deb [arch=amd64] https://repo.fastnetmon.com/fastnetmon_ubuntu_focal focal fastnetmon" > /etc/apt/sources.list.d/fastnetmon.list &&\
+    DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
+    echo "deb [arch=amd64] https://repo.fastnetmon.com/fastnetmon_ubuntu_jammy jammy fastnetmon" > /etc/apt/sources.list.d/fastnetmon.list &&\
     echo '-----BEGIN PGP PUBLIC KEY BLOCK-----\n\
 Version: GnuPG v1\n\
  \n\
@@ -33,6 +35,6 @@ Version: GnuPG v1\n\
  =kFoU\n\
  -----END PGP PUBLIC KEY BLOCK-----' >> fastnetmon.key && apt-key add fastnetmon.key && \
     apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=2.0.280
+    DEBIAN_FRONTEND=noninteractive apt-get install -y fastnetmon=$FASTNETMON_VERSION
 
 CMD exec /opt/fastnetmon/app/bin/fastnetmon
