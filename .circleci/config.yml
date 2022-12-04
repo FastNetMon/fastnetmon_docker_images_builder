@@ -6,7 +6,7 @@ parameters:
 jobs:
  build:
    machine:
-     image: ubuntu-1604:202104-01
+     image: ubuntu-2004:current
    steps:
      - checkout
      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:<< pipeline.parameters.fastnetmon_version >> -t fastnetmonltd/fastnetmon-advanced:latest --build-arg FASTNETMON_VERSION=<< pipeline.parameters.fastnetmon_version >>
