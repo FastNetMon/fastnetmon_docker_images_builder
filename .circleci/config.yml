@@ -12,6 +12,6 @@ jobs:
      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:<< pipeline.parameters.fastnetmon_version >> -t fastnetmonltd/fastnetmon-advanced:latest --build-arg FASTNETMON_VERSION=<< pipeline.parameters.fastnetmon_version >>
      - run: sudo docker images
      - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-     - run: sudo docker push fastnetmonltd/fastnetmon-advanced:<< pipeline.parameters.fastnetmon_version >>
-     - run: sudo docker push fastnetmonltd/fastnetmon-advanced:latest
+     - run: docker push fastnetmonltd/fastnetmon-advanced:<< pipeline.parameters.fastnetmon_version >>
+     - run: docker push fastnetmonltd/fastnetmon-advanced:latest
 
