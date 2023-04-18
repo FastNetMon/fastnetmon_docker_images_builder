@@ -20,3 +20,20 @@ jobs:
      - run: docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
      - run: docker push fastnetmonltd/fastnetmon-advanced:latest
 
+# We have two different workflows to trigger same tasks on commit and nightly
+# We run this one to build Docker images for new release or to upgrade system packages for current release
+workflows:
+  version: 2
+  all_distros_nightly:
+    jobs:
+      - build
+    triggers:
+      - schedule:
+          cron: "30 2 * * *"
+          filters:
+            branches:
+              only:
+                - master
+  all_distros:
+    jobs:
+      - build
