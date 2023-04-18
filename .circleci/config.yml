@@ -11,9 +11,9 @@ jobs:
      - checkout
      - run:
          name: Retrieve latest stable version of FastNetMon Advanced to use as part of Docker image name
-          # Add source command to execute code and make variables
-          # available in current step.
-          command: |
+         # Add source command to execute code and make variables
+         # available in current step.
+         command: |
             echo "export LATEST_FASTNETMON_VERSION=`curl -s https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/22.04/fastnetmon_latest_version.dat`" >> "$BASH_ENV"
             source "$BASH_ENV"
      - run: echo "Latest version of FastNetMon is: LATEST_FASTNETMON_VERSION"
