@@ -31,8 +31,19 @@ jobs:
           name: Generate build tag
           command: |
             echo "export DOCKER_TAG='${LATEST_FASTNETMON_VERSION}-ubuntu${UBUNTU_VERSION}'" >> "$BASH_ENV"
-      - run: echo "Docker tag is $DOCKER_TAG"
-      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+      - run:
+          name: Set ubuntu name for repo
+          command: |
+            if [ "$UBUNTU_VERSION" == "24.04" ] ; then
+              echo "export FASTNETMON_DISTR_NAME='noble' >> "$BASH_ENV"
+            elsif [ "$UBUNTU_VERSION" == "22.04" ] ; then
+              echo "export FASTNETMON_DISTR_NAME='jammy' >> "$BASH_ENV"
+            else
+              echo "unknown $UBUNTU_VERSION - fail"
+              exit 1
+            fi
+      - run: echo "Docker tag is $DOCKER_TAG and ubuntu name for repo $FASTNETMON_DISTR_NAME"
+      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION --build-arg FASTNETMON_DISTR_NAME=$UBUNTU_NAME --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
       - when:
           condition:
             equal: [ true, << parameters.latest >> ]
