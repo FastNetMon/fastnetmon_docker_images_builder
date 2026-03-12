@@ -1,6 +1,7 @@
-FROM ubuntu:22.04
-
+ARG UBUNTU_VERSION=24.04
 ARG FASTNETMON_VERSION
+FROM ubuntu:${UBUNTU_VERSION}
+
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https systemd iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
