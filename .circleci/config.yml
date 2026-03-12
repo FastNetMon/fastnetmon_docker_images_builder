@@ -34,10 +34,10 @@ jobs:
       - run:
           name: Set ubuntu name for repo
           command: |
-            if [ "$UBUNTU_VERSION" == "24.04" ] ; then
-              echo "export FASTNETMON_DISTR_NAME='noble' >> "$BASH_ENV"
-            elsif [ "$UBUNTU_VERSION" == "22.04" ] ; then
-              echo "export FASTNETMON_DISTR_NAME='jammy' >> "$BASH_ENV"
+            if [ "$UBUNTU_VERSION" = "24.04" ]; then
+              echo "export FASTNETMON_DISTR_NAME='noble'" >> "$BASH_ENV"
+            elif [ "$UBUNTU_VERSION" = "22.04" ]; then
+              echo "export FASTNETMON_DISTR_NAME='jammy'" >> "$BASH_ENV"
             else
               echo "unknown $UBUNTU_VERSION - fail"
               exit 1
