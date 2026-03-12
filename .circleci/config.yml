@@ -43,7 +43,7 @@ jobs:
               exit 1
             fi
       - run: echo "Docker tag is $DOCKER_TAG and ubuntu name for repo $FASTNETMON_DISTR_NAME"
-      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION --build-arg FASTNETMON_DISTR_NAME=$UBUNTU_NAME --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION --build-arg FASTNETMON_DISTR_NAME=$FASTNETMON_DISTR_NAME --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
       - when:
           condition:
             equal: [ true, << parameters.latest >> ]
