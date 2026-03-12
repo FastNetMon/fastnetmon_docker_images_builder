@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 ARG FASTNETMON_VERSION
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y wget apt-transport-https systemd iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
     echo "deb [arch=amd64] https://repo.fastnetmon.com/fastnetmon_ubuntu_jammy jammy fastnetmon" > /etc/apt/sources.list.d/fastnetmon.list &&\
     echo '-----BEGIN PGP PUBLIC KEY BLOCK-----\n\
 Version: GnuPG v1\n\
