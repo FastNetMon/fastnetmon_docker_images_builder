@@ -16,9 +16,13 @@ jobs:
      - run: echo "Latest version of FastNetMon is $LATEST_FASTNETMON_VERSION"
      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION -t fastnetmonltd/fastnetmon-advanced:latest --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION
      - run: sudo docker images
-     - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-     - run: docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
-     - run: docker push fastnetmonltd/fastnetmon-advanced:latest
+     - when:
+        condition:
+           equal: [ "master", << pipeline.git.branch >> ]
+        steps:
+          - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+          - run: docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+          - run: docker push fastnetmonltd/fastnetmon-advanced:latest
 
 # We have two different workflows to trigger same tasks on commit and nightly
 # We run this one to build Docker images for new release or to upgrade system packages for current release
