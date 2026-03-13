@@ -1,36 +1,82 @@
+            
 version: 2.1
 jobs:
- build:
-   machine:
-     image: ubuntu-2204:current
-   steps:
-     - checkout
-     - run:
-         name: Retrieve latest stable version of FastNetMon Advanced to use as part of Docker image name
-         # Add source command to execute code and make variables
-         # available in current step.
-         command: |
-            echo "export LATEST_FASTNETMON_VERSION=`curl -s https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/22.04/fastnetmon_x86_64_latest_version.dat`" >> "$BASH_ENV"
+  build:
+    parameters:
+      ubuntu_version:
+        description: Choose ubuntu version for docker image
+        type: string
+        default: "24.04"
+      latest:
+        description: Mark template as latest
+        type: boolean
+        default: false
+    environment:
+      UBUNTU_VERSION: << parameters.ubuntu_version >>
+      LATEST: << parameters.latest >>
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - run:
+          name: Retrieve latest stable version of FastNetMon Advanced to use as part of Docker image name
+          # Add source command to execute code and make variables
+          # available in current step.
+          command: |
+            echo "export LATEST_FASTNETMON_VERSION=`curl -s https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat`" >> "$BASH_ENV"
             cat "$BASH_ENV"
             source "$BASH_ENV"
-     - run: echo "Latest version of FastNetMon is $LATEST_FASTNETMON_VERSION"
-     - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION -t fastnetmonltd/fastnetmon-advanced:latest --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION
-     - run: sudo docker images
-     - when:
-        condition:
-           equal: [ "master", << pipeline.git.branch >> ]
-        steps:
-          - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-          - run: docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
-          - run: docker push fastnetmonltd/fastnetmon-advanced:latest
+      - run: echo "Latest version of FastNetMon is $LATEST_FASTNETMON_VERSION"
+      - run:
+          name: Generate build tag
+          command: |
+            echo "export DOCKER_TAG='${LATEST_FASTNETMON_VERSION}-ubuntu${UBUNTU_VERSION}'" >> "$BASH_ENV"
+      - run:
+          name: Set ubuntu name for repo
+          command: |
+            if [ "$UBUNTU_VERSION" = "24.04" ]; then
+              echo "export FASTNETMON_DISTR_NAME='noble'" >> "$BASH_ENV"
+            elif [ "$UBUNTU_VERSION" = "22.04" ]; then
+              echo "export FASTNETMON_DISTR_NAME='jammy'" >> "$BASH_ENV"
+            else
+              echo "unknown $UBUNTU_VERSION - fail"
+              exit 1
+            fi
+      - run: echo "Docker tag is $DOCKER_TAG and ubuntu name for repo $FASTNETMON_DISTR_NAME"
+      - run: docker build . -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION --build-arg FASTNETMON_DISTR_NAME=$FASTNETMON_DISTR_NAME --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+      - when:
+          condition:
+            equal: [ true, << parameters.latest >> ]
+          steps:
+            - run: docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+            - run: docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:latest
+      - run: sudo docker images
+      - when:
+          condition:
+            equal: [ "master", << pipeline.git.branch >> ]
+          steps:
+            - run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            - run: docker push fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG
+      - when:
+          condition:
+            and:
+              - equal: [ "master", << pipeline.git.branch >> ]
+              - equal: [ true, << parameters.latest >> ]
+          steps:
+            - run: docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+            - run: docker push fastnetmonltd/fastnetmon-advanced:latest
 
 # We have two different workflows to trigger same tasks on commit and nightly
 # We run this one to build Docker images for new release or to upgrade system packages for current release
 workflows:
-  version: 2
   all_distros_nightly:
     jobs:
-      - build
+      - build:
+          ubuntu_version: "22.04"
+          latest: false
+      - build:
+          ubuntu_version: "24.04"
+          latest: true
     triggers:
       - schedule:
           cron: "30 2 * * *"
@@ -40,4 +86,11 @@ workflows:
                 - master
   all_distros:
     jobs:
-      - build
+      - build:
+          name: build-with-ubuntu22
+          ubuntu_version: "22.04"
+          latest: false
+      - build:
+          name: build-with-ubuntu24
+          ubuntu_version: "24.04"
+          latest: true
