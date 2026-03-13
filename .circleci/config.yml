@@ -73,6 +73,9 @@ workflows:
     jobs:
       - build:
           ubuntu_version: "22.04"
+          latest: false
+      - build:
+          ubuntu_version: "24.04"
           latest: true
     triggers:
       - schedule:
@@ -84,10 +87,10 @@ workflows:
   all_distros:
     jobs:
       - build:
-          name: build-22
+          name: build-with-ubuntu22
           ubuntu_version: "22.04"
-          latest: true
-      - build:
-          name: build-24
-          ubuntu_version: "24.04"
           latest: false
+      - build:
+          name: build-with-ubuntu24
+          ubuntu_version: "24.04"
+          latest: true
