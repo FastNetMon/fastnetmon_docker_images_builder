@@ -13,4 +13,4 @@ RUN apt-get update && \
     apt-get install -y fastnetmon=$FASTNETMON_VERSION && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-CMD exec /opt/fastnetmon/app/bin/fastnetmon
+CMD ["/opt/fastnetmon/app/bin/fastnetmon"]
