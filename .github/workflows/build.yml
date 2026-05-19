@@ -1,0 +1,80 @@
+name: Build FastNetMon Docker images
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  schedule:
+    # Nightly build at 02:30 UTC
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: "22.04"
+            distr_name: "jammy"
+            latest: false
+          - ubuntu_version: "24.04"
+            distr_name: "noble"
+            latest: true
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      FASTNETMON_DISTR_NAME: ${{ matrix.distr_name }}
+      LATEST: ${{ matrix.latest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Retrieve latest stable version of FastNetMon Advanced
+        run: |
+          LATEST_FASTNETMON_VERSION=$(curl -s "https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat")
+          if [ -z "$LATEST_FASTNETMON_VERSION" ]; then
+            echo "Failed to fetch latest FastNetMon version"
+            exit 1
+          fi
+          echo "LATEST_FASTNETMON_VERSION=${LATEST_FASTNETMON_VERSION}" >> "$GITHUB_ENV"
+          echo "DOCKER_TAG=${LATEST_FASTNETMON_VERSION}-ubuntu${UBUNTU_VERSION}" >> "$GITHUB_ENV"
+          echo "Latest version of FastNetMon is $LATEST_FASTNETMON_VERSION"
+
+      - name: Show build configuration
+        run: |
+          echo "Docker tag is $DOCKER_TAG and ubuntu name for repo $FASTNETMON_DISTR_NAME"
+
+      - name: Build Docker image
+        run: |
+          docker build . \
+            -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG \
+            --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION \
+            --build-arg FASTNETMON_DISTR_NAME=$FASTNETMON_DISTR_NAME \
+            --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+
+      - name: Tag as latest
+        if: matrix.latest == true
+        run: |
+          docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+          docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:latest
+
+      - name: List images
+        run: docker images
+
+      - name: Log in to Docker Hub
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Push versioned tag
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        run: docker push fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG
+
+      - name: Push latest tags
+        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.latest == true
+        run: |
+          docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+          docker push fastnetmonltd/fastnetmon-advanced:latest
