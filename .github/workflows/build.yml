@@ -13,8 +13,61 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  # PR builds: verify the image builds, but never touch secrets and never push.
+  # GITHUB_TOKEN is reduced to no permissions as defense-in-depth.
+  pr-build:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-22.04
+    permissions: {}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: "22.04"
+            distr_name: "jammy"
+          - ubuntu_version: "24.04"
+            distr_name: "noble"
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      FASTNETMON_DISTR_NAME: ${{ matrix.distr_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Retrieve latest stable version of FastNetMon Advanced
+        run: |
+          LATEST_FASTNETMON_VERSION=$(curl -s "https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat")
+          if [ -z "$LATEST_FASTNETMON_VERSION" ]; then
+            echo "Failed to fetch latest FastNetMon version"
+            exit 1
+          fi
+          echo "LATEST_FASTNETMON_VERSION=${LATEST_FASTNETMON_VERSION}" >> "$GITHUB_ENV"
+          echo "DOCKER_TAG=${LATEST_FASTNETMON_VERSION}-ubuntu${UBUNTU_VERSION}-pr${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
+          echo "Latest version of FastNetMon is $LATEST_FASTNETMON_VERSION"
+
+      - name: Show build configuration
+        run: |
+          echo "Docker tag is $DOCKER_TAG and ubuntu name for repo $FASTNETMON_DISTR_NAME"
+
+      - name: Build Docker image (no push)
+        run: |
+          docker build . \
+            -t fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG \
+            --build-arg FASTNETMON_VERSION=$LATEST_FASTNETMON_VERSION \
+            --build-arg FASTNETMON_DISTR_NAME=$FASTNETMON_DISTR_NAME \
+            --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+
+      - name: List images
+        run: docker images
+
+  # Trusted builds: push, schedule, manual dispatch. Has access to DockerHub secrets.
+  build-and-publish:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -32,6 +85,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Retrieve latest stable version of FastNetMon Advanced
         run: |
@@ -66,15 +121,18 @@ jobs:
         run: docker images
 
       - name: Log in to Docker Hub
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-        run: echo "${{ secrets.DOCKERHUB_PASS }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        if: github.ref == 'refs/heads/master'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_PASS: ${{ secrets.DOCKERHUB_PASS }}
+        run: echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
 
       - name: Push versioned tag
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/master'
         run: docker push fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG
 
       - name: Push latest tags
-        if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request' && matrix.latest == true
+        if: github.ref == 'refs/heads/master' && matrix.latest == true
         run: |
           docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
           docker push fastnetmonltd/fastnetmon-advanced:latest
