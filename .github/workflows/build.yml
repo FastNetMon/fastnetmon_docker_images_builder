@@ -116,6 +116,8 @@ jobs:
         run: |
           docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
           docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmonltd/fastnetmon-advanced:latest
+          docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmon/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+          docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmon/fastnetmon-advanced:latest
 
       - name: List images
         run: docker images
