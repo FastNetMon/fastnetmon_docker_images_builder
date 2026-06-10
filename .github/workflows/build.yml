@@ -136,3 +136,5 @@ jobs:
         run: |
           docker push fastnetmonltd/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
           docker push fastnetmonltd/fastnetmon-advanced:latest
+          docker push fastnetmon/fastnetmon-advanced:$LATEST_FASTNETMON_VERSION
+          docker push fastnetmon/fastnetmon-advanced:latest
