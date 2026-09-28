@@ -38,7 +38,7 @@ jobs:
 
       - name: Retrieve latest stable version of FastNetMon Advanced
         run: |
-          LATEST_FASTNETMON_VERSION=$(curl -s "https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat")
+          LATEST_FASTNETMON_VERSION=$(curl -s "https://storage.googleapis.com/fastnetmon_advanced_release_packages/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat")
           if [ -z "$LATEST_FASTNETMON_VERSION" ]; then
             echo "Failed to fetch latest FastNetMon version"
             exit 1
