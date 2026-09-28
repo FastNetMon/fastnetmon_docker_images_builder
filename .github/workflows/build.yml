@@ -17,7 +17,7 @@ jobs:
   # GITHUB_TOKEN is reduced to no permissions as defense-in-depth.
   pr-build:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions: {}
     strategy:
       fail-fast: false
@@ -27,6 +27,8 @@ jobs:
             distr_name: "jammy"
           - ubuntu_version: "24.04"
             distr_name: "noble"
+          - ubuntu_version: "26.04"
+            distr_name: "resolute"
     env:
       UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
       FASTNETMON_DISTR_NAME: ${{ matrix.distr_name }}
@@ -65,7 +67,7 @@ jobs:
   # Trusted builds: push, schedule, manual dispatch. Has access to DockerHub secrets.
   build-and-publish:
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     strategy:
