@@ -1,0 +1,20 @@
+ARG UBUNTU_VERSION=24.04
+FROM ubuntu:${UBUNTU_VERSION}
+ARG FASTNETMON_VERSION
+ARG FASTNETMON_COMMIT
+ARG UBUNTU_VERSION
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+#ADD https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_${FASTNETMON_VERSION}_amd64_${FASTNETMON_COMMIT}.deb /tmp/fastnetmon.deb
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y ca-certificates wget systemd iproute2 gpg msmtp pwgen curl strace aggregate whois tcpdump mtr-tiny && \
+    wget -O /tmp/fastnetmon.deb https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_${FASTNETMON_VERSION}_amd64_${FASTNETMON_COMMIT}.deb && \
+    dpkg -i /tmp/fastnetmon.deb && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && rm /tmp/fastnetmon.deb
+
+CMD ["/opt/fastnetmon/app/bin/fastnetmon"]
+
+
+LABEL org.opencontainers.image.source="https://github.com/FastNetMon/fastnetmon_docker_images_builder"

@@ -1,0 +1,113 @@
+name: Build Docker image with FastNetMon developer version
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  #schedule:
+  #  # Nightly build at 02:30 UTC
+  #  - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      fastnetmon_version:
+        type: string
+        required: false
+      fastnetmon_commit:
+        type: string
+        required: false
+
+jobs:
+  # Trusted builds: push, schedule, manual dispatch. Has access to DockerHub secrets.
+  # But push only if it is refs/heads/master
+  build-and-publish-dev:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      # For push in containers registry
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu_version: "22.04"
+            latest: false
+          - ubuntu_version: "24.04"
+            latest: true
+          - ubuntu_version: "26.04"
+            latest: false
+    env:
+      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      LATEST: ${{ matrix.latest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Check param, if not set  - retrieve latest developer version of FastNetMon Advanced
+        env:
+          FASTNETMON_VERSION_INPUT: ${{ inputs.fastnetmon_version }}
+          FASTNETMON_COMMIT_INPUT: ${{ inputs.fastnetmon_commit }}
+        run: |
+          FASTNETMON_VERSION="$FASTNETMON_VERSION_INPUT"
+
+          if [ -z "$FASTNETMON_VERSION" ]; then
+            FASTNETMON_VERSION=$(curl -fsS https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_version.dat)
+          fi
+          if [ -z "$FASTNETMON_VERSION" ]; then
+            echo "Failed to fetch FastNetMon developer version"
+            exit 1
+          fi
+
+          FASTNETMON_COMMIT="$FASTNETMON_COMMIT_INPUT"
+          if [ -z "$FASTNETMON_COMMIT" ]; then
+            FASTNETMON_COMMIT=$(curl -fsS https://storage.googleapis.com/fastnetmon_advanced_packages_unstable/ubuntu/${UBUNTU_VERSION}/fastnetmon_x86_64_latest_commit.dat)
+          fi
+          if [ -z "$FASTNETMON_COMMIT" ]; then
+            echo "Failed to fetch FastNetMon developer commit"
+            exit 1
+          fi
+          echo "FASTNETMON_VERSION=${FASTNETMON_VERSION}" >> "$GITHUB_ENV"
+          echo "FASTNETMON_COMMIT=${FASTNETMON_COMMIT}" >> "$GITHUB_ENV"
+
+          DOCKER_TAG="dev-${FASTNETMON_VERSION}-ubuntu${UBUNTU_VERSION}"
+          DOCKER_TAG=$(printf '%s' "$DOCKER_TAG" | sed 's/[^A-Za-z0-9_.-]/-/g')
+          echo "DOCKER_TAG=${DOCKER_TAG}" >> "$GITHUB_ENV"
+          echo "Version is $FASTNETMON_VERSION"
+          echo "Commit is $FASTNETMON_COMMIT"
+          echo "Docker tag is $DOCKER_TAG"
+
+      - name: Build Docker image
+        run: |
+          docker build . -f Dockerfile.dev \
+            -t ghcr.io/fastnetmon/fastnetmon-advanced-dev:$DOCKER_TAG \
+            --build-arg FASTNETMON_VERSION=$FASTNETMON_VERSION \
+            --build-arg FASTNETMON_COMMIT=$FASTNETMON_COMMIT \
+            --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
+
+      - name: Tag as latest
+        if: matrix.latest == true
+        run: |
+          #docker image tag ghcr.io/fastnetmon/fastnetmon-advanced-dev:$DOCKER_TAG ghcr.io/fastnetmon/fastnetmon-advanced-dev:$FASTNETMON_VERSION
+          docker image tag ghcr.io/fastnetmon/fastnetmon-advanced-dev:$DOCKER_TAG ghcr.io/fastnetmon/fastnetmon-advanced-dev:dev-latest
+
+      - name: List images
+        run: docker images
+
+      - name: Log in to GHCR
+        if: github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push versioned tag
+        if: github.ref == 'refs/heads/master'
+        run: docker push ghcr.io/fastnetmon/fastnetmon-advanced-dev:$DOCKER_TAG 
+
+      - name: Push latest tags
+        if: github.ref == 'refs/heads/master' && matrix.latest == true
+        run: docker push ghcr.io/fastnetmon/fastnetmon-advanced-dev:dev-latest
