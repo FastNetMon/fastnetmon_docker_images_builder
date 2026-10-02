@@ -65,6 +65,9 @@ jobs:
             --build-arg FASTNETMON_DISTR_NAME=$FASTNETMON_DISTR_NAME \
             --build-arg UBUNTU_VERSION=$UBUNTU_VERSION
 
+      - name: Tag alias
+        run:  docker image tag fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG fastnetmon/fastnetmon-advanced:$DOCKER_TAG
+
       - name: Tag as latest
         if: matrix.latest == true
         run: |
@@ -85,7 +88,9 @@ jobs:
 
       - name: Push versioned tag
         if: github.ref == 'refs/heads/master'
-        run: docker push fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG
+        run: |
+          docker push fastnetmonltd/fastnetmon-advanced:$DOCKER_TAG
+          docker push fastnetmon/fastnetmon-advanced:$DOCKER_TAG
 
       - name: Push latest tags
         if: github.ref == 'refs/heads/master' && matrix.latest == true
