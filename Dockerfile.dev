@@ -18,3 +18,4 @@ CMD ["/opt/fastnetmon/app/bin/fastnetmon"]
 
 
 LABEL org.opencontainers.image.source="https://github.com/FastNetMon/fastnetmon_docker_images_builder"
+LABEL org.opencontainers.image.description="FastNetMon is a very high performance DDoS detector built on top of multiple packet capture engines: NetFlow, IPFIX, sFlow and SPAN/port mirror. https://fastnetmon.com/docs-fnm-advanced/"
